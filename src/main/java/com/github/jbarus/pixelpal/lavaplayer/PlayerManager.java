@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Future;
+
 @Component
 public class PlayerManager {
     private final AudioPlayerManager audioPlayerManager;
@@ -22,7 +24,7 @@ public class PlayerManager {
 
     public GuildMusicManager getGuildMusicManager(Guild guild){
         return guildMusicManagers.computeIfAbsent(guild.getIdLong(), (guildId) -> {
-            GuildMusicManager musicManager = new GuildMusicManager(audioPlayerManager);
+            GuildMusicManager musicManager = new GuildMusicManager(audioPlayerManager, guild);
 
             guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
 
@@ -30,19 +32,17 @@ public class PlayerManager {
         });
     }
 
-    public void play(Guild guild, String trackURL){
+    public Future<Void> play(Guild guild, String trackURL, Long id){
         GuildMusicManager guildMusicManager = getGuildMusicManager(guild);
-        audioPlayerManager.loadItemOrdered(guildMusicManager, trackURL, new AudioLoadResultHandler() {
+        return audioPlayerManager.loadItemOrdered(guildMusicManager, trackURL, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                guildMusicManager.getTrackScheduler().queue(track);
+                guildMusicManager.getTrackScheduler().queue(track, id);
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                for (AudioTrack audioTrack : playlist.getTracks()){
-                    guildMusicManager.getTrackScheduler().queue(audioTrack);
-                }
+                guildMusicManager.getTrackScheduler().queuePlaylist(playlist.getTracks(),id);
             }
 
             @Override

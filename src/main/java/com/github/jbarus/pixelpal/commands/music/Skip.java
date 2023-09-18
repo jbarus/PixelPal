@@ -1,45 +1,45 @@
 package com.github.jbarus.pixelpal.commands.music;
 
 import com.github.jbarus.pixelpal.commands.Command;
+import com.github.jbarus.pixelpal.lavaplayer.GuildMusicManager;
 import com.github.jbarus.pixelpal.lavaplayer.PlayerManager;
+import com.github.jbarus.pixelpal.lavaplayer.TrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
+import java.util.OptionalInt;
+import java.util.concurrent.BlockingQueue;
 @Component
-public class Play implements Command {
-
+public class Skip implements Command {
     private final PlayerManager playerManager;
 
-    public Play(PlayerManager playerManager) {
+    public Skip(PlayerManager playerManager) {
         this.playerManager = playerManager;
     }
 
     @Override
     public String getName() {
-        return "play";
+        return "skip";
     }
 
     @Override
     public String getDescription() {
-        return "Will play a song";
+        return "Will skip desired number of songs";
     }
 
     @Override
     public List<OptionData> getOptions() {
         List<OptionData> options = new ArrayList<>();
-        options.add(new OptionData(OptionType.STRING,"name","YouTube link",true));
+        options.add(new OptionData(OptionType.INTEGER,"number","number of songs to skip, leave blank to skip one",false));
         return options;
     }
 
@@ -56,29 +56,19 @@ public class Play implements Command {
         Member self = event.getGuild().getSelfMember();
         GuildVoiceState selfVoiceState = self.getVoiceState();
 
-        if(!selfVoiceState.inAudioChannel()) {
-            event.getGuild().getAudioManager().openAudioConnection(memberVoiceState.getChannel());
-        } else {
-            if(selfVoiceState.getChannel() != memberVoiceState.getChannel()) {
-                event.reply("You need to be in the same channel as me").queue();
-                return;
-            }
+        if(selfVoiceState.getChannel() != memberVoiceState.getChannel()) {
+            event.reply("You need to be in the same channel as me").queue();
+            return;
         }
 
-        String name = event.getOption("name").getAsString();
-
-        Future<Void> future = playerManager.play(event.getGuild(), name, event.getIdLong());
-        try {
-            future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+        int numberOfSongs = event.getOption("number",1, OptionMapping::getAsInt);
+        GuildMusicManager guildMusicManager = playerManager.getGuildMusicManager(event.getGuild());
+        TrackScheduler trackScheduler = guildMusicManager.getTrackScheduler();
+        AudioPlayer player = trackScheduler.getPlayer();
+        BlockingQueue<AudioTrack> queue = trackScheduler.getQueue();
+        for (int i = 0; i < numberOfSongs; i++) {
+            player.stopTrack();
         }
-        AudioTrack track = playerManager.getGuildMusicManager(event.getGuild()).getTrackScheduler().getTracksToEmbed().remove(event.getIdLong());
-        EmbedBuilder embedBuilder = new EmbedBuilder();
-        embedBuilder.setTitle("Now will start playing:");
-        embedBuilder.setDescription("[" + track.getInfo().title + "]" + "(" + track.getInfo().uri + ")");
-        embedBuilder.setThumbnail(track.getInfo().artworkUrl);
-
-        event.replyEmbeds(embedBuilder.build()).queue();
+        event.reply("Skipped " + numberOfSongs + " songs!").queue();
     }
 }

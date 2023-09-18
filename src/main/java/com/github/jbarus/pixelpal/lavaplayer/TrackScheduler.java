@@ -2,10 +2,13 @@ package com.github.jbarus.pixelpal.lavaplayer;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import lombok.Getter;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -13,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class TrackScheduler extends AudioEventAdapter {
     private final AudioPlayer player;
     private final BlockingQueue<AudioTrack> queue = new LinkedBlockingQueue<>();
+    private HashMap<Long,AudioTrack> tracksToEmbed = new HashMap<>();
 
     public TrackScheduler(AudioPlayer player) {
         this.player = player;
@@ -23,10 +27,21 @@ public class TrackScheduler extends AudioEventAdapter {
         player.startTrack(queue.poll(), false);
     }
 
-    public void queue(AudioTrack track){
+    public void queue(AudioTrack track, Long id){
+        tracksToEmbed.put(id,track);
         if(!player.startTrack(track, true)){
             queue.offer(track);
         }
 
     }
+    public void queuePlaylist(List<AudioTrack> tracks, Long id){
+        tracksToEmbed.put(id,tracks.get(0));
+        for(AudioTrack track : tracks){
+            if(!player.startTrack(track, true)){
+                queue.offer(track);
+            }
+        }
+
+    }
+
 }
