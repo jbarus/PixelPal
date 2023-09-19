@@ -70,13 +70,7 @@ public class Play implements Command {
 
         String name = event.getOption("name").getAsString();
 
-        Future<Void> future = playerManager.play(event.getGuild(), name, event.getIdLong());
-        //try {
-            //future.get();
-        //} catch (InterruptedException | ExecutionException e) {
-            //throw new RuntimeException(e);
-        //}
-        //AudioTrack track = playerManager.getGuildMusicManager(event.getGuild()).getTrackScheduler().getTracksToEmbed().remove(event.getIdLong());
+        playerManager.play(event.getGuild(), name);
         event.deferReply().queue();
         Future<MessageEmbed> futureEmbed = embedManager.getEmbed(name);
         MessageEmbed embed;
