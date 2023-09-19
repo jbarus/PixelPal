@@ -1,12 +1,13 @@
 package com.github.jbarus.pixelpal.commands.music;
 
 import com.github.jbarus.pixelpal.commands.Command;
+import com.github.jbarus.pixelpal.embeds.EmbedManager;
 import com.github.jbarus.pixelpal.lavaplayer.PlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.GuildVoiceState;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -21,9 +22,11 @@ import java.util.concurrent.Future;
 public class Play implements Command {
 
     private final PlayerManager playerManager;
+    private final EmbedManager embedManager;
 
-    public Play(PlayerManager playerManager) {
+    public Play(PlayerManager playerManager, EmbedManager embedManager) {
         this.playerManager = playerManager;
+        this.embedManager = embedManager;
     }
 
     @Override
@@ -68,17 +71,25 @@ public class Play implements Command {
         String name = event.getOption("name").getAsString();
 
         Future<Void> future = playerManager.play(event.getGuild(), name, event.getIdLong());
+        //try {
+            //future.get();
+        //} catch (InterruptedException | ExecutionException e) {
+            //throw new RuntimeException(e);
+        //}
+        //AudioTrack track = playerManager.getGuildMusicManager(event.getGuild()).getTrackScheduler().getTracksToEmbed().remove(event.getIdLong());
+        event.deferReply().queue();
+        Future<MessageEmbed> futureEmbed = embedManager.getEmbed(name);
+        MessageEmbed embed;
         try {
-            future.get();
+            embed = futureEmbed.get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
-        AudioTrack track = playerManager.getGuildMusicManager(event.getGuild()).getTrackScheduler().getTracksToEmbed().remove(event.getIdLong());
-        EmbedBuilder embedBuilder = new EmbedBuilder();
-        embedBuilder.setTitle("Now will start playing:");
-        embedBuilder.setDescription("[" + track.getInfo().title + "]" + "(" + track.getInfo().uri + ")");
-        embedBuilder.setThumbnail(track.getInfo().artworkUrl);
+        if(embed == null){
+            event.getHook().sendMessage("Something went wrong with embed").queue();
+        }else{
+            event.getHook().sendMessageEmbeds(embed).queue();
+        }
 
-        event.replyEmbeds(embedBuilder.build()).queue();
     }
 }

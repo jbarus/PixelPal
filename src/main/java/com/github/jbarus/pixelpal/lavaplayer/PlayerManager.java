@@ -1,5 +1,6 @@
 package com.github.jbarus.pixelpal.lavaplayer;
 
+import com.github.jbarus.pixelpal.embeds.EmbedManager;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -15,10 +16,12 @@ import java.util.concurrent.Future;
 @Component
 public class PlayerManager {
     private final AudioPlayerManager audioPlayerManager;
+    private final EmbedManager embedManager;
     private Map<Long, GuildMusicManager> guildMusicManagers = new HashMap<>();
 
-    public PlayerManager(AudioPlayerManager audioPlayerManager) {
+    public PlayerManager(AudioPlayerManager audioPlayerManager, EmbedManager embedManager) {
         this.audioPlayerManager = audioPlayerManager;
+        this.embedManager = embedManager;
     }
 
 
@@ -37,11 +40,13 @@ public class PlayerManager {
         return audioPlayerManager.loadItemOrdered(guildMusicManager, trackURL, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
+                embedManager.addTrack(trackURL,track);
                 guildMusicManager.getTrackScheduler().queue(track, id);
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                embedManager.addTrack(trackURL,playlist.getTracks().get(0));
                 guildMusicManager.getTrackScheduler().queuePlaylist(playlist.getTracks(),id);
             }
 

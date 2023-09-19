@@ -66,9 +66,13 @@ public class Skip implements Command {
         TrackScheduler trackScheduler = guildMusicManager.getTrackScheduler();
         AudioPlayer player = trackScheduler.getPlayer();
         BlockingQueue<AudioTrack> queue = trackScheduler.getQueue();
-        for (int i = 0; i < numberOfSongs; i++) {
-            player.stopTrack();
+        if(numberOfSongs>queue.size()){
+            numberOfSongs = queue.size() + 1;
         }
+        for (int i = 0; i < numberOfSongs-1; i++) {
+            queue.poll();
+        }
+        player.stopTrack();
         event.reply("Skipped " + numberOfSongs + " songs!").queue();
     }
 }

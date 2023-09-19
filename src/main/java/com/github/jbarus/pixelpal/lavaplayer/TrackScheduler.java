@@ -28,14 +28,14 @@ public class TrackScheduler extends AudioEventAdapter {
     }
 
     public void queue(AudioTrack track, Long id){
-        tracksToEmbed.put(id,track);
+        //tracksToEmbed.put(id,track);
         if(!player.startTrack(track, true)){
             queue.offer(track);
         }
 
     }
     public void queuePlaylist(List<AudioTrack> tracks, Long id){
-        tracksToEmbed.put(id,tracks.get(0));
+        //tracksToEmbed.put(id,tracks.get(0));
         for(AudioTrack track : tracks){
             if(!player.startTrack(track, true)){
                 queue.offer(track);
