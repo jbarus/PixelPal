@@ -1,6 +1,7 @@
 package com.github.jbarus.pixelpal.embeds;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,14 @@ public class EmbedManager {
             embedBuilder.setThumbnail(track.getInfo().artworkUrl);
             return embedBuilder.build();
         });
+    }
+
+    public MessageEmbed getEmbedForTrack(AudioTrack track){
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        embedBuilder.setTitle("Now playing:");
+        embedBuilder.setDescription("[" + track.getInfo().title + "]" + "(" + track.getInfo().uri + ")");
+        embedBuilder.setThumbnail(track.getInfo().artworkUrl);
+        return embedBuilder.build();
     }
 
     public void addTrack(String trackUrl, AudioTrack track){
