@@ -9,9 +9,10 @@ import net.dv8tion.jda.api.entities.Guild;
 public class GuildMusicManager {
     private TrackScheduler trackScheduler;
     private AudioPlayerSendHandler sendHandler;
+    private AudioPlayer player;
 
     public GuildMusicManager (AudioPlayerManager manager, Guild guild){
-        AudioPlayer player = manager.createPlayer();
+        player = manager.createPlayer();
         trackScheduler = new TrackScheduler(player);
         player.addListener(trackScheduler);
         sendHandler = new AudioPlayerSendHandler(player,guild);
