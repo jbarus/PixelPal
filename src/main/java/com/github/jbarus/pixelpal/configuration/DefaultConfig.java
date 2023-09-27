@@ -11,6 +11,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 @Configuration
 public class DefaultConfig {
     @Value("${TOKEN}")
@@ -31,6 +34,11 @@ public class DefaultConfig {
         AudioSourceManagers.registerRemoteSources(audioPlayer);
         AudioSourceManagers.registerLocalSource(audioPlayer);
         return audioPlayer;
+    }
+
+    @Bean
+    public ExecutorService executorService(){
+        return Executors.newCachedThreadPool();
     }
 
 }
